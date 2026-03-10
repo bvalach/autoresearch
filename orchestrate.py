@@ -56,10 +56,10 @@ def ollama_chat(model, messages, temperature=0.7):
             "stream": False,
             "options": {
                 "temperature": temperature,
-                "num_predict": 4096,
+                "num_predict": 512,
             },
         },
-        timeout=120,
+        timeout=300,
     )
     resp.raise_for_status()
     return resp.json()["message"]["content"]
@@ -258,7 +258,9 @@ VARIABLE_NAME = new_value
 Example:
 DESCRIPTION: increase LoRA rank from 8 to 16
 CHANGES:
-LORA_CONFIG["rank"] = 16"""
+LORA_CONFIG["rank"] = 16
+
+/no_think"""
 
 
 # Config variables that the agent is allowed to modify
