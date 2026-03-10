@@ -21,3 +21,13 @@ dev/
 
 # Results file
 results.tsv
+
+# Training artifacts
+adapters/
+run.log
+
+# MLX model cache (large)
+models/
+
+# uv lock (platform-specific for this fork)
+uv.lock
