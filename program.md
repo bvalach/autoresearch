@@ -23,6 +23,7 @@ You modify `train.py`. The knobs at your disposal:
 - **batch_size** — samples per step (1, 2, 4, 8)
 - **grad_accum_steps** — gradient accumulation (effective batch = batch_size * this)
 - **max_seq_length** — context window per sample (256, 512, 1024, 2048)
+- **val_batches** — how many validation batches to score during training-side evals
 - **optimizer** — "adam", "adamw", or "muon"
 - **lr_schedule** — "cosine" or None
 - **seed** — random seed

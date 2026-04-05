@@ -237,6 +237,9 @@ def build_agent_prompt(train_py_content, results_text, experiment_num):
 
     return f"""You are an autonomous ML researcher minimizing val_bpb via LoRA fine-tuning.
 
+Program:
+{program}
+
 Current config:
 {config_section}
 
