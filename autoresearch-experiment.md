@@ -11,7 +11,7 @@ Pi (orquestador ligero — scheduler, métricas, bucle)
     ↓
 M5 → Qwen3.5:9b (agente evaluador — ya corriendo para DevonThink)
          ↓ propone modificaciones al config/LoRA
-     Qwen3.5:0.5B o 1.5B (modelo objetivo — se re-fine-tunea)
+     Qwen3.5-2B-Base (modelo objetivo — se re-fine-tunea)
          ↓ mlx-lm LoRA ~5 min por iteración
      métricas BPB → el 9B decide si guarda o descarta
 ```
@@ -22,7 +22,7 @@ M5 → Qwen3.5:9b (agente evaluador — ya corriendo para DevonThink)
 |---|---|
 | Fine-tuning | `mlx-lm` (Apple Silicon nativo, sin CUDA) |
 | Modelo agente | Qwen3.5:9b vía Ollama (ya instalado) |
-| Modelo objetivo | Qwen3.5:0.5B o 1.5B |
+| Modelo objetivo | Qwen3.5-2B-Base |
 | Orquestación | Script Python ligero en Pi |
 | Métrica | bits-per-byte (BPB) como en Karpathy |
 

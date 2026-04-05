@@ -9,7 +9,7 @@
 | **Hardware** | Single NVIDIA GPU (H100) | Apple Silicon (M-series) |
 | **Framework** | PyTorch + CUDA + Flash Attention 3 | MLX (Apple's ML framework) |
 | **Approach** | Train a GPT from scratch | LoRA fine-tune an existing model |
-| **Base model** | N/A (trains from random init) | Qwen3.5-0.8B |
+| **Base model** | N/A (trains from random init) | Qwen3.5-2B-Base |
 | **Agent** | Claude / Codex (cloud API) | Qwen3.5:9b via Ollama (fully local) |
 | **Dataset** | climbmix-400b | TinyStories |
 | **Metric** | val_bpb | val_bpb (same) |
@@ -17,7 +17,7 @@
 
 The core idea is identical: give an AI agent a training setup and let it experiment autonomously overnight. It modifies the configuration, trains for 5 minutes, checks if the result improved, keeps or discards, and repeats.
 
-The key difference is that everything runs **locally on a MacBook** — no cloud APIs, no NVIDIA GPU, no API costs. The researcher agent (Qwen3.5:9b) runs via Ollama, and the training target (Qwen3.5-0.8B) is fine-tuned with LoRA adapters using MLX.
+The key difference is that everything runs **locally on a MacBook** — no cloud APIs, no NVIDIA GPU, no API costs. The researcher agent (Qwen3.5:9b) runs via Ollama, and the training target (Qwen3.5-2B-Base) is fine-tuned with LoRA adapters using MLX.
 
 ## How it works
 
@@ -30,7 +30,7 @@ orchestrate.py (the loop)
     │
     ├─→ Applies changes to train.py
     ├─→ git commit
-    ├─→ Runs LoRA training via mlx-lm (5 min budget)
+    ├─→ Runs LoRA training via mlx-lm internals (5 min wall-clock budget)
     ├─→ Evaluates BPB on validation set
     ├─→ keep (new best) / discard (revert)
     └─→ LOOP forever
@@ -81,8 +81,9 @@ The agent modifies `train.py` each iteration. The search space includes:
 
 ## Design choices
 
-- **LoRA, not full training.** On Apple Silicon with 24 GB unified memory, LoRA fine-tuning of a 0.8B model is fast (~5 min/iteration) and fits comfortably. Full pre-training of even a small GPT would be too slow to iterate meaningfully.
-- **Fully local.** No API calls, no cloud dependency. The 9B agent model runs in Ollama alongside the 0.8B training target. Both share the M-series unified memory.
+- **LoRA, not full training.** On Apple Silicon with 24 GB unified memory, LoRA fine-tuning of a 2B base model is still practical, while remaining much more useful than a sub-1B target. Full pre-training would still be too slow to iterate meaningfully.
+- **Base model, not post-trained chat model.** We use `Qwen3.5-2B-Base` as the target so the experiment does not inherit verbose reasoning or chat-specific behaviour from the post-trained checkpoint.
+- **Fully local.** No API calls, no cloud dependency. The 9B agent model runs in Ollama alongside the 2B base training target. Both share the M-series unified memory.
 - **Same loop logic as Karpathy.** 5-minute time budget, BPB metric, git-based keep/discard. The `results.tsv` format is compatible.
 - **TinyStories dataset.** Following Karpathy's recommendation for small models — lower entropy data yields meaningful results with fewer parameters.
 
@@ -91,7 +92,7 @@ The agent modifies `train.py` each iteration. The search space includes:
 Tested on Apple M5 (24 GB). Memory usage during training:
 
 - Qwen3.5:9b in Ollama: ~6.6 GB
-- Qwen3.5-0.8B LoRA training: ~2-4 GB
+- Qwen3.5-2B-Base LoRA training: single-digit GBs depending on sequence length and accumulation
 - Total: ~10 GB, leaving headroom for macOS
 
 On 16 GB Macs: consider using a smaller agent (Qwen3:8b or Qwen3-0.6B) or quantizing the agent model.
@@ -99,7 +100,7 @@ On 16 GB Macs: consider using a smaller agent (Qwen3:8b or Qwen3-0.6B) or quanti
 ## Future directions
 
 - **Pi as scheduler:** Offload the orchestration loop to a Raspberry Pi, keeping the Mac's full memory for training.
-- **Multi-model tournaments:** Run different base models (Qwen3-0.6B vs Qwen3.5-0.8B vs Qwen3-1.7B) and let them compete.
+- **Multi-model tournaments:** Run different base models (Qwen3.5-2B-Base vs Gemma base variants) and let them compete.
 - **Dataset exploration:** Let the agent choose from multiple datasets, not just TinyStories.
 - **Adapter stacking:** Accumulate LoRA adapters across experiments instead of training from scratch each time.
 

@@ -4,7 +4,7 @@ You are an autonomous ML researcher running LoRA fine-tuning experiments on Appl
 
 ## What you're doing
 
-You fine-tune a small language model (Qwen3.5-0.8B) using LoRA adapters on
+You fine-tune a small language model (Qwen3.5-2B-Base) using LoRA adapters on
 TinyStories data. Each experiment runs for a fixed 5-minute time budget. The
 metric is **val_bpb** (validation bits per byte) — lower is better.
 
@@ -38,7 +38,7 @@ You modify `train.py`. The knobs at your disposal:
 ## What you cannot change
 - `prepare.py` — data loading, tokenizer, evaluation metric (BPB). Read-only.
 - `orchestrate.py` — the experiment loop. Read-only.
-- The base model (Qwen3.5-0.8B) and dataset (TinyStories) are fixed.
+- The base model (Qwen3.5-2B-Base) and dataset (TinyStories) are fixed.
 - No new dependencies or packages.
 
 ## Output format

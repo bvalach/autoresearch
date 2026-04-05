@@ -112,8 +112,8 @@ def git_commit_and_get_hash(message):
 
 
 def git_revert_last():
-    """Revert the last commit (keep changes staged)."""
-    git("reset", "--hard", "HEAD~1")
+    """Revert the last experiment commit without clobbering local artifacts."""
+    git("revert", "--no-edit", "HEAD")
 
 
 # ---------------------------------------------------------------------------
@@ -194,6 +194,8 @@ def run_training():
                 val_bpb = float(line.split(":")[1].strip())
             elif line.startswith("peak_mem_mb:"):
                 peak_mem = float(line.split(":")[1].strip())
+            elif line.startswith("peak_mem_gb:") and peak_mem == 0.0:
+                peak_mem = float(line.split(":")[1].strip()) * 1024
 
         return val_bpb, peak_mem, val_bpb > 0
 
@@ -221,19 +223,17 @@ def build_agent_prompt(train_py_content, results_text, experiment_num):
     best_bpb = get_best_bpb()
     best_str = f"{best_bpb:.6f}" if best_bpb else "(no baseline yet)"
 
-    # Extract just the config section from train.py for context
+    # Extract the editable config block from train.py for context.
     config_lines = []
     in_config = False
     for line in train_py_content.split("\n"):
-        if "LoRA Configuration" in line or "Training Hyperparameters" in line:
+        if "LoRA Configuration" in line:
             in_config = True
-        elif in_config and line.startswith("# ------"):
-            if config_lines:  # end of second config section
-                break
-            continue
+        elif in_config and "Runtime Helpers" in line:
+            break
         if in_config:
             config_lines.append(line)
-    config_section = "\n".join(config_lines)
+    config_section = "\n".join(config_lines).strip()
 
     return f"""You are an autonomous ML researcher minimizing val_bpb via LoRA fine-tuning.
 
@@ -244,10 +244,11 @@ Results so far:
 {results_text}
 Best val_bpb: {best_str} | Experiment #{experiment_num}
 
-Knobs: rank (4-64), dropout (0-0.2), scale (10-40), lora_num_layers (-1=all),
-learning_rate (1e-5 to 1e-3), batch_size (1-4), grad_accum_steps (1-16),
-max_seq_length (128-1024), optimizer (adam/adamw), lr_schedule (cosine/None),
-max_iters (100-500).
+Knobs: rank (4-64), dropout (0-0.2), scale (10-40), LORA_NUM_LAYERS (-1=all),
+LEARNING_RATE (1e-6 to 5e-4), BATCH_SIZE (1-4), GRAD_ACCUM_STEPS (1-16),
+MAX_SEQ_LENGTH (128-2048), OPTIMIZER (adam/adamw/muon/sgd/adafactor),
+LR_SCHEDULE (cosine/None), MAX_ITERS (100-1200), VAL_BATCHES (4-32),
+STEPS_PER_EVAL (10-100), STEPS_PER_REPORT (5-50), SEED (integer).
 
 Propose ONE change. Respond in EXACTLY this format (no extra text):
 DESCRIPTION: <one line>
@@ -266,7 +267,7 @@ ALLOWED_CONFIGS = {
     'LORA_CONFIG["rank"]', 'LORA_CONFIG["dropout"]', 'LORA_CONFIG["scale"]',
     'LORA_NUM_LAYERS', 'LEARNING_RATE', 'BATCH_SIZE', 'GRAD_ACCUM_STEPS',
     'MAX_SEQ_LENGTH', 'OPTIMIZER', 'LR_SCHEDULE', 'STEPS_PER_EVAL',
-    'STEPS_PER_REPORT', 'SEED', 'MAX_ITERS',
+    'STEPS_PER_REPORT', 'SEED', 'MAX_ITERS', 'VAL_BATCHES',
 }
 
 

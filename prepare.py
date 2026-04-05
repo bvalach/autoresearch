@@ -1,7 +1,7 @@
 """
 One-time data and model preparation for autoresearch-mlx-lora.
 
-Downloads a small base model (Qwen3.5-0.8B) and prepares TinyStories
+Downloads a base model (Qwen3.5-2B-Base) and prepares TinyStories
 as train/val JSONL splits for mlx-lm LoRA fine-tuning.
 
 Usage:
@@ -35,8 +35,9 @@ CACHE_DIR = os.path.join(os.path.expanduser("~"), ".cache", "autoresearch-mlx")
 DATA_DIR = os.path.join(CACHE_DIR, "data")
 MODEL_DIR = os.path.join(CACHE_DIR, "models")
 
-# Base model: Qwen3.5-0.8B — small enough for LoRA on 24 GB unified memory
-BASE_MODEL = "Qwen/Qwen3.5-0.8B"
+# Base model: Qwen3.5-2B-Base — better target than 0.8B, while still practical
+# for LoRA on 24 GB unified memory.
+BASE_MODEL = "Qwen/Qwen3.5-2B-Base"
 
 # Dataset: TinyStories — low entropy, clean, good results with small models
 DATASET_NAME = "karpathy/tinystories-gpt4-clean"
